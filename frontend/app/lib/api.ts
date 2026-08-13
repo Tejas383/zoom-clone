@@ -21,6 +21,10 @@ export async function getMeeting(meetingId: string): Promise<Meeting> {
     `http://localhost:8000/meetings/${meetingId}`
   );
 
+  if (!response.ok) {
+    throw new Error("Meeting not found");
+  }
+
   return response.json();
 }
 

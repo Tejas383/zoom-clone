@@ -46,7 +46,7 @@ export default function Dashboard() {
       {/* Main Navbar */}
       <div className="h-[72px] bg-white border-b flex items-center justify-between px-8">
         <div className="flex items-center gap-10">
-          <div className="text-5xl font-bold text-blue-600">zoom</div>
+          <div className="text-4xl font-bold text-blue-600">zoom</div>
 
           <div className="flex items-center gap-10 text-gray-700 font-medium">
             <span>Products</span>
@@ -58,7 +58,15 @@ export default function Dashboard() {
 
         <div className="flex items-center gap-8 text-gray-700 font-semibold">
           <button onClick={() => router.push("/schedule")}>Schedule</button>
-          <button onClick={() => router.push("/join")}>Join</button>
+          {/* <button onClick={() => router.push("/join")}>Join</button> */}
+          <button
+            onClick={() => {
+              console.log("JOIN BUTTON CLICKED");
+              router.push("/join");
+            }}
+          >
+            Join
+          </button>
           <span onClick={handleInstantMeeting}>Host</span>
           <span>Web App</span>
 
@@ -242,59 +250,101 @@ export default function Dashboard() {
           <div className="w-[360px] space-y-6">
             {/* Quick Actions */}
             <div className="bg-white rounded-2xl p-8 border shadow-sm">
-              <div className="flex justify-around">
+              <div className="grid grid-cols-3 gap-4">
+                {/* Schedule */}
                 <button
+                  type="button"
                   onClick={() => router.push("/schedule")}
-                  className="text-center"
+                  className="group text-center"
                 >
-                  <div className="h-16 w-16 rounded-2xl bg-blue-600 mx-auto"></div>
-                  <p className="mt-3">Schedule</p>
+                  <div className="h-16 w-16 rounded-2xl bg-blue-600 mx-auto flex items-center justify-center text-white text-xl transition group-hover:bg-blue-700">
+                    +
+                  </div>
+
+                  <p className="mt-3 font-medium text-gray-800">Schedule</p>
                 </button>
 
+                {/* Join */}
                 <button
+                  type="button"
                   onClick={() => router.push("/join")}
-                  className="text-center"
+                  className="group text-center"
                 >
-                  <div className="h-16 w-16 rounded-2xl bg-blue-600 mx-auto"></div>
-                  <p className="mt-3">Join</p>
+                  <div className="h-16 w-16 rounded-2xl bg-blue-600 mx-auto flex items-center justify-center text-white text-xl transition group-hover:bg-blue-700">
+                    →
+                  </div>
+
+                  <p className="mt-3 font-medium text-gray-800">Join</p>
                 </button>
 
-                <button onClick={handleInstantMeeting} className="text-center">
-                  <div className="h-16 w-16 rounded-2xl bg-orange-500 mx-auto"></div>
-                  <p className="mt-3">Host</p>
+                {/* New Meeting */}
+                <button
+                  type="button"
+                  onClick={handleInstantMeeting}
+                  className="group text-center"
+                >
+                  <div className="h-16 w-16 rounded-2xl bg-orange-500 mx-auto flex items-center justify-center text-white text-xl transition group-hover:bg-orange-600">
+                    ▶
+                  </div>
+
+                  <p className="mt-3 font-medium text-gray-800">New Meeting</p>
                 </button>
               </div>
 
-              <div className="mt-10 text-center">
-                <h3 className="font-semibold text-2xl">Personal Meeting ID</h3>
+              <div className="mt-10 text-center border-t pt-8">
+                <h3 className="font-semibold text-xl">Personal Meeting ID</h3>
 
-                <p className="mt-4 text-xl">937 337 3571</p>
+                <p className="mt-3 text-lg text-gray-600">937 337 3571</p>
               </div>
             </div>
 
             {/* Meetings Card */}
             <div className="bg-white rounded-2xl p-8 border shadow-sm">
               <div className="flex justify-between items-center">
-                <h2 className="text-4xl font-semibold">Meetings</h2>
+                <h2 className="text-3xl font-semibold">Meetings</h2>
 
-                <span className="text-blue-600">Visit Meetings</span>
-              </div>
-
-              <div className="mt-6 bg-gray-100 rounded-lg p-3">Today</div>
-
-              <div className="mt-6 border rounded-2xl p-5">
-                <h3 className="text-blue-600 text-2xl font-medium">
-                  My Meeting
-                </h3>
-
-                <p className="mt-3 font-semibold">9:30 PM - 10:10 PM</p>
-
-                <p className="mt-3 text-gray-500">Meeting ID: 723 414 0282</p>
-
-                <button className="mt-5 bg-gray-100 rounded-xl px-4 py-2 text-blue-600">
-                  Copy Invitation
+                <button
+                  onClick={() => router.push("/schedule")}
+                  className="text-blue-600 text-sm font-medium"
+                >
+                  Schedule
                 </button>
               </div>
+
+              <div className="mt-6 bg-gray-100 rounded-lg p-3 text-sm text-gray-600">
+                Upcoming
+              </div>
+
+              {upcomingMeetings.length === 0 ? (
+                <p className="mt-6 text-gray-500">No upcoming meetings.</p>
+              ) : (
+                <div className="mt-6 space-y-4">
+                  {upcomingMeetings.slice(0, 2).map((meeting) => (
+                    <div key={meeting.id} className="border rounded-2xl p-5">
+                      <h3 className="text-blue-600 text-xl font-medium">
+                        {meeting.title}
+                      </h3>
+
+                      <p className="mt-3 font-semibold">
+                        {new Date(meeting.scheduled_at).toLocaleString()}
+                      </p>
+
+                      <p className="mt-3 text-gray-500">
+                        Meeting ID: {meeting.meeting_id}
+                      </p>
+
+                      <button
+                        onClick={() =>
+                          router.push(`/meeting/${meeting.meeting_id}`)
+                        }
+                        className="mt-5 bg-gray-100 rounded-xl px-4 py-2 text-blue-600 hover:bg-blue-50"
+                      >
+                        Join
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
