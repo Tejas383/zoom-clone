@@ -27,3 +27,17 @@ class MeetingResponse(BaseModel):
     # Allow Pydantic to read values directly from
     # SQLAlchemy ORM model attributes.
     model_config = ConfigDict(from_attributes=True)
+
+class ParticipantCreate(BaseModel):
+    display_name: str
+    # only this, and nothing else (like the joining time or leaving time)
+    # since, we don't want the participants to tell us at what time they joined or left
+
+class ParticipantResponse(BaseModel):
+    id: int
+    meeting_id: int
+    display_name: str
+    joined_at: datetime
+    left_at: datetime | None
+    
+    model_config = ConfigDict(from_attributes=True)
