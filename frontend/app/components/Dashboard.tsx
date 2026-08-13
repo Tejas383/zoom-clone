@@ -16,6 +16,16 @@ export default function Dashboard() {
     });
   }, []);
 
+  const now = new Date();
+
+  const upcomingMeetings = meetings.filter(
+    (meeting) => new Date(meeting.scheduled_at) > now,
+  );
+
+  const recentMeetings = meetings.filter(
+    (meeting) => new Date(meeting.scheduled_at) <= now,
+  );
+
   const handleInstantMeeting = async () => {
     const meeting = await createInstantMeeting();
 
@@ -142,38 +152,89 @@ export default function Dashboard() {
             </div>
 
             {/* Recent Activity */}
+            {/* Upcoming Meetings */}
             <div className="bg-white rounded-2xl p-8 shadow-sm border">
-              <h2 className="text-4xl font-semibold mb-8">Recent activity</h2>
+              <h2 className="text-4xl font-semibold mb-8">Upcoming Meetings</h2>
 
-              {meetings.map((meeting) => (
-                <div
-                  key={meeting.id}
-                  className="mt-6 rounded-lg border border-gray-200 bg-white p-5 shadow-sm"
-                >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h2 className="text-lg font-medium text-gray-900">
+              {upcomingMeetings.length === 0 ? (
+                <p className="text-gray-500">No upcoming meetings.</p>
+              ) : (
+                <div className="space-y-4">
+                  {upcomingMeetings.map((meeting) => (
+                    <div
+                      key={meeting.id}
+                      className="rounded-xl border border-gray-200 p-5"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h3 className="text-xl font-semibold text-gray-900">
+                            {meeting.title}
+                          </h3>
+
+                          {meeting.description && (
+                            <p className="mt-1 text-sm text-gray-500">
+                              {meeting.description}
+                            </p>
+                          )}
+
+                          <p className="mt-3 text-sm text-gray-600">
+                            {new Date(meeting.scheduled_at).toLocaleString()}
+                          </p>
+
+                          <p className="mt-1 text-sm text-gray-500">
+                            Duration: {meeting.duration} minutes
+                          </p>
+                        </div>
+
+                        <button
+                          onClick={() =>
+                            router.push(`/meeting/${meeting.meeting_id}`)
+                          }
+                          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white"
+                        >
+                          Join
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Recent Meetings */}
+            <div className="bg-white rounded-2xl p-8 shadow-sm border">
+              <h2 className="text-4xl font-semibold mb-8">Recent Meetings</h2>
+
+              {recentMeetings.length === 0 ? (
+                <p className="text-gray-500">No recent meetings.</p>
+              ) : (
+                <div className="space-y-4">
+                  {recentMeetings.map((meeting) => (
+                    <div
+                      key={meeting.id}
+                      className="rounded-xl border border-gray-200 p-5"
+                    >
+                      <h3 className="text-xl font-semibold text-gray-900">
                         {meeting.title}
-                      </h2>
+                      </h3>
 
-                      <p className="mt-1 text-sm text-gray-600">
-                        {meeting.description}
+                      {meeting.description && (
+                        <p className="mt-1 text-sm text-gray-500">
+                          {meeting.description}
+                        </p>
+                      )}
+
+                      <p className="mt-3 text-sm text-gray-600">
+                        {new Date(meeting.scheduled_at).toLocaleString()}
                       </p>
 
-                      <p className="mt-2 text-sm text-gray-500">
-                        {meeting.scheduled_at}
+                      <p className="mt-1 text-sm text-gray-500">
+                        Meeting ID: {meeting.meeting_id}
                       </p>
                     </div>
-
-                    <a
-                      href={meeting.invite_link}
-                      className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white"
-                    >
-                      Join
-                    </a>
-                  </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
