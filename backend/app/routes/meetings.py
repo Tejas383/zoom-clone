@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 import secrets
 from datetime import datetime
@@ -10,6 +10,7 @@ from ..models import Meeting
 router = APIRouter()
 
 @router.post("/meetings", response_model=MeetingResponse)
+# format the response from this request using MeetingResponse (schema)
 def create_meeting(
     meeting: MeetingCreate,
     # the meeting param must be a MeetingCreate Object
@@ -24,7 +25,7 @@ def create_meeting(
     while db.query(Meeting).filter(Meeting.meeting_id == meeting_id).first():
         meeting_id = str(secrets.randbelow(900000000) + 100000000)
 
-    invite_link = f"http://localhost:3000/meeting/{meeting_id}"
+    invite_link = f"http://localhost:8000/meeting/{meeting_id}"
 
     meeting_db = Meeting(
         meeting_id = meeting_id,
@@ -44,3 +45,25 @@ def create_meeting(
     db.refresh(meeting_db)
     # make sure this Python object has the latest values from the database
     return meeting_db
+
+@router.get("/meetings", response_model=list[MeetingResponse])
+# the endpoint returns multiple meetings (list), each following the MeetingResponse schema
+def get_meetings(
+    db: Session = Depends(get_db)
+):
+    meetings = db.query(Meeting).all()
+    return meetings
+
+@router.get("/meetings/{meeting_id}", response_model=MeetingResponse)
+def get_meeting(
+    meeting_id: str,
+    db: Session = Depends(get_db)
+):
+    meeting_db = db.query(Meeting).filter(Meeting.meeting_id == meeting_id).first()
+    if meeting_db is None:
+        raise HTTPException(
+            status_code = 404,
+            detail = "Meeting not found"
+        )
+    return meeting_db
+
