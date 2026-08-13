@@ -9,6 +9,22 @@ from ..models import Meeting, Participant
 
 router = APIRouter()
 
+def update_meeting_status(meeting: Meeting):
+    from datetime import timedelta
+
+    now = datetime.now()
+
+    if meeting.status == "scheduled" and now >= meeting.scheduled_at:
+        meeting.status = "active"
+
+    if meeting.status == "active":
+        end_time = meeting.scheduled_at + timedelta(
+            minutes=meeting.duration
+        )
+
+        if now >= end_time:
+            meeting.status = "ended"
+
 @router.post("/meetings", response_model=MeetingResponse)
 # format the response from this request using MeetingResponse (schema)
 def create_meeting(
@@ -77,6 +93,10 @@ def get_meeting(
             status_code = 404,
             detail = "Meeting not found"
         )
+    
+    update_meeting_status(meeting_db)
+    db.commit()
+
     return meeting_db
 
 @router.post("/meetings/{meeting_id}/join", response_model=ParticipantResponse)
@@ -132,3 +152,61 @@ def create_instant_meeting(
     db.refresh(meeting_db)
     return meeting_db
 
+@router.get(
+    "/meetings/{meeting_id}/participants",
+    response_model=list[ParticipantResponse]
+)
+def get_participants(
+    meeting_id: str,
+    db: Session = Depends(get_db)
+):
+    meeting_db = db.query(Meeting).filter(
+        Meeting.meeting_id == meeting_id
+    ).first()
+
+    if meeting_db is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Meeting not found"
+        )
+
+    participants = db.query(Participant).filter(
+        Participant.meeting_id == meeting_db.id
+    ).all()
+
+    return participants
+
+@router.post("/meetings/{meeting_id}/leave")
+def leave_meeting(
+    meeting_id: str,
+    participant: ParticipantCreate,
+    db: Session = Depends(get_db)
+):
+    meeting_db = db.query(Meeting).filter(
+        Meeting.meeting_id == meeting_id
+    ).first()
+
+    if meeting_db is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Meeting not found"
+        )
+
+    participant_db = db.query(Participant).filter(
+        Participant.meeting_id == meeting_db.id,
+        Participant.display_name == participant.display_name,
+        Participant.left_at == None
+    ).first()
+
+    if participant_db is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Participant not found"
+        )
+
+    participant_db.left_at = datetime.now()
+
+    db.commit()
+    db.refresh(participant_db)
+
+    return participant_db
