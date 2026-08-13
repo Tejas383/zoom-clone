@@ -5,53 +5,54 @@ from .models import Meeting
 
 Base.metadata.create_all(bind=engine)
 
-db = SessionLocal()
 
 def seed_database():
-    if db.query(Meeting).first():
-        print("Database already contains meetings.")
-        return
+    db = SessionLocal()
 
-    now = datetime.now()
+    try:
+        if db.query(Meeting).first():
+            print("Database already contains meetings.")
+            return
 
-    meetings = [
-        Meeting(
-            meeting_id="123456789",
-            title="Team Standup",
-            description="Daily project team meeting",
-            scheduled_at=now + timedelta(hours=2),
-            duration=30,
-            invite_link="http://localhost:3000/meeting/123456789",
-            status="scheduled",
-            created_at=now,
-        ),
-        Meeting(
-            meeting_id="234567890",
-            title="Project Discussion",
-            description="Discuss upcoming project milestones",
-            scheduled_at=now + timedelta(days=1),
-            duration=60,
-            invite_link="http://localhost:3000/meeting/234567890",
-            status="scheduled",
-            created_at=now,
-        ),
-        Meeting(
-            meeting_id="345678901",
-            title="Sprint Review",
-            description="Review completed sprint work",
-            scheduled_at=now - timedelta(days=1),
-            duration=45,
-            invite_link="http://localhost:3000/meeting/345678901",
-            status="completed",
-            created_at=now - timedelta(days=2),
-        ),
-    ]
+        now = datetime.now()
 
-    db.add_all(meetings)
-    db.commit()
+        meetings = [
+            Meeting(
+                meeting_id="123456789",
+                title="Team Standup",
+                description="Daily project team meeting",
+                scheduled_at=now + timedelta(hours=2),
+                duration=30,
+                invite_link="http://localhost:3000/meeting/123456789",
+                status="scheduled",
+                created_at=now,
+            ),
+            Meeting(
+                meeting_id="234567890",
+                title="Project Discussion",
+                description="Discuss upcoming project milestones",
+                scheduled_at=now + timedelta(days=1),
+                duration=60,
+                invite_link="http://localhost:3000/meeting/234567890",
+                status="scheduled",
+                created_at=now,
+            ),
+            Meeting(
+                meeting_id="345678901",
+                title="Sprint Review",
+                description="Review completed sprint work",
+                scheduled_at=now - timedelta(days=1),
+                duration=45,
+                invite_link="http://localhost:3000/meeting/345678901",
+                status="completed",
+                created_at=now - timedelta(days=2),
+            ),
+        ]
 
-    print("Sample meetings added successfully.")
+        db.add_all(meetings)
+        db.commit()
 
-seed_database()
+        print("Sample meetings added successfully.")
 
-db.close()
+    finally:
+        db.close()
