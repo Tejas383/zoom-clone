@@ -90,3 +90,33 @@ def join_meeting(
     db.commit()
     db.refresh(participant_db)
     return participant_db
+
+@router.post("/meetings/instant", response_model=MeetingResponse)
+# there will be no meetingcreate request body
+# the backend will create everything
+def create_instant_meeting(
+    db: Session = Depends(get_db)
+):
+    meeting_id = str(secrets.randbelow(900000000) + 100000000)
+
+    while db.query(Meeting).filter(Meeting.meeting_id == meeting_id).first():
+        meeting_id = str(secrets.randbelow(900000000) + 100000000)
+
+    invite_link = f"http://localhost:3000/meeting/{meeting_id}"
+
+    meeting_db = Meeting(
+        meeting_id = meeting_id,
+        title = "Instant Meeting",
+        description = None,
+        scheduled_at = datetime.now(),
+        duration = 60,
+        invite_link = invite_link,
+        status = "active",
+        created_at = datetime.now()
+    )
+
+    db.add(meeting_db)
+    db.commit()
+    db.refresh(meeting_db)
+    return meeting_db
+
