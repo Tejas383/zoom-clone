@@ -1,3 +1,6 @@
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  
 export type Meeting = {
   id: number;
   meeting_id: string;
@@ -11,14 +14,14 @@ export type Meeting = {
 };
 
 export async function getMeetings(): Promise<Meeting[]> {
-  const response = await fetch("http://localhost:8000/meetings");
+  const response = await fetch(`${API_URL}/meetings`);
 
   return response.json();
 }
 
 export async function getMeeting(meetingId: string): Promise<Meeting> {
   const response = await fetch(
-    `http://localhost:8000/meetings/${meetingId}`
+    `${API_URL}/meetings/${meetingId}`
   );
 
   if (!response.ok) {
@@ -33,7 +36,7 @@ export async function joinMeeting(
   displayName: string
 ) {
   const response = await fetch(
-    `http://localhost:8000/meetings/${meetingId}/join`,
+    `${API_URL}/meetings/${meetingId}/join`,
     {
       method: "POST",
       headers: {
@@ -50,7 +53,7 @@ export async function joinMeeting(
 
 export async function getParticipants(meetingId: string) {
   const response = await fetch(
-    `http://localhost:8000/meetings/${meetingId}/participants`
+    `${API_URL}/meetings/${meetingId}/participants`
   );
 
   if (!response.ok) {
@@ -65,7 +68,7 @@ export async function leaveMeeting(
   displayName: string
 ) {
   const response = await fetch(
-    `http://localhost:8000/meetings/${meetingId}/leave`,
+    `${API_URL}/meetings/${meetingId}/leave`,
     {
       method: "POST",
       headers: {
@@ -86,7 +89,7 @@ export async function leaveMeeting(
 
 export async function createInstantMeeting() {
   const response = await fetch(
-    "http://localhost:8000/meetings/instant",
+    `${API_URL}/meetings/instant`,
     {
       method: "POST",
     }
@@ -108,7 +111,7 @@ export async function createMeeting(meeting: {
   console.log("Sending meeting:", meeting);
 
   const response = await fetch(
-    "http://localhost:8000/meetings",
+    `${API_URL}/meetings`,
     {
       method: "POST",
       headers: {

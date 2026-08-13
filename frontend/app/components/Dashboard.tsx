@@ -35,7 +35,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-[#f7f7f8]">
       {/* Top Utility Bar */}
-      <div className="h-11 bg-[#05052d] text-white flex items-center justify-end gap-8 px-8 text-sm">
+      <div className="h-10 bg-[#05052d] text-white flex items-center justify-end gap-8 px-8 text-md">
         <span>Search</span>
         <span>Support</span>
         <span>0008000503335</span>
@@ -44,11 +44,11 @@ export default function Dashboard() {
       </div>
 
       {/* Main Navbar */}
-      <div className="h-[72px] bg-white border-b flex items-center justify-between px-8">
-        <div className="flex items-center gap-10">
-          <div className="text-4xl font-bold text-blue-600">zoom</div>
+      <div className="h-[66px] bg-white border-b flex items-center justify-between px-4">
+        <div className="flex items-center gap-8">
+          <div className="text-5xl font-bold text-blue-600">zoom</div>
 
-          <div className="flex items-center gap-10 text-gray-700 font-medium">
+          <div className="flex items-center gap-10 text-gray-500 font-bold">
             <span>Products</span>
             <span>Solutions</span>
             <span>Resources</span>
@@ -57,36 +57,63 @@ export default function Dashboard() {
         </div>
 
         <div className="flex items-center gap-8 text-gray-700 font-semibold">
-          <button onClick={() => router.push("/schedule")}>Schedule</button>
-          {/* <button onClick={() => router.push("/join")}>Join</button> */}
           <button
-            onClick={() => {
-              console.log("JOIN BUTTON CLICKED");
-              router.push("/join");
-            }}
+            onClick={() => router.push("/schedule")}
+            className="hover:text-blue-600 transition"
+          >
+            Schedule
+          </button>
+
+          <button
+            onClick={() => router.push("/join")}
+            className="hover:text-blue-600 transition"
           >
             Join
           </button>
-          <span onClick={handleInstantMeeting}>Host</span>
-          <span>Web App</span>
 
-          <div className="h-10 w-10 rounded-full bg-gray-300"></div>
+          <button
+            onClick={handleInstantMeeting}
+            className="hover:text-blue-600 transition"
+          >
+            Host
+            <span className="text-xs"> ▼</span>
+          </button>
+
+          <button
+            onClick={() => router.push("/")}
+            className="hover:text-blue-600 transition"
+          >
+            Web App
+            <span className="text-xs"> ▼</span>
+          </button>
+
+          <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+            <span className="text-gray-600 font-medium">T</span>
+          </div>
         </div>
       </div>
 
       {/* Main Layout */}
       <div className="flex">
         {/* Sidebar */}
-        <aside className="w-[260px] bg-[#f3f4f6] border-r min-h-[calc(100vh-116px)]">
-          <div className="bg-[#eaf2ff] text-blue-600 px-10 py-4 font-medium">
+        <aside className="w-[300px] bg-[#fcfcfd] border-r min-h-[calc(100vh-116px)]">
+          <button
+            onClick={() => router.push("/")}
+            className="w-full text-left bg-[#eaf2ff] text-blue-600 px-10 py-3 font-medium"
+          >
             Home
-          </div>
+          </button>
 
           <div className="p-8">
             <p className="text-gray-500 text-sm mb-6">My Products</p>
 
             <div className="space-y-5 text-[18px] text-gray-800">
-              <div>Meetings</div>
+              <button
+                onClick={() => router.push("/")}
+                className="text-left hover:text-blue-600 transition"
+              >
+                Meetings
+              </button>
               <div>Recordings</div>
               <div>Summaries</div>
               <div>Hub</div>
