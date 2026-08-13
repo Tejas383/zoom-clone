@@ -23,3 +23,13 @@ SessionLocal = sessionmaker(
 Base = declarative_base()
 # 4. parent class for future SQLAlchemy models
 # creates the base class for models
+
+def get_db():
+    db = SessionLocal()
+    # create a session
+    try:
+        yield db
+        # pause the fn and give a value back temporarily
+    finally:
+        db.close()
+        # closing the session (executes even if sth goes wrong while handlling the request)
