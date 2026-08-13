@@ -18,6 +18,18 @@ def create_meeting(
     # db must be a SQLAlchemy Session
     # before calling the endpoint, run get_db() and return the result to fastAPI
 ):
+    if meeting.scheduled_at < datetime.now():
+        raise HTTPException(
+            status_code=400,
+            detail="Meeting cannot be scheduled in the past"
+        )
+    
+    if meeting.duration <= 0:
+        raise HTTPException(
+        status_code=400,
+        detail="Duration must be greater than 0 minutes"
+    )
+
     meeting_id = str(secrets.randbelow(900000000) + 100000000)
     # produces a random number between 100000000 and 999999999
     # exactly 9 digits
