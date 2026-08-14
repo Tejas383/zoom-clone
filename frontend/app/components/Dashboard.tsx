@@ -1,362 +1,689 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getMeetings, Meeting, createInstantMeeting } from "@/app/lib/api";
 import { useRouter } from "next/navigation";
+
+/**
+ * Zoom brand palette (approximated — the signed-in portal is behind auth).
+ * Kept here so every surface uses the same values.
+ */
+const ZOOM = {
+  blue: "#0b5cff",
+  blueHover: "#0442c4",
+  blueTint: "#eaf2ff",
+  orange: "#ff6d2f",
+  orangeHover: "#e85d22",
+  navy: "#05052d",
+  ink: "#131619",
+  muted: "#6e7680",
+  border: "#e5e5e9",
+  page: "#f7f7f8",
+  rail: "#fcfcfd",
+};
+
+const UTILITY_LINKS = [
+  "Search",
+  "Support",
+  "0008000503335",
+  "Contact Sales",
+  "Request a Demo",
+];
+
+const NAV_LINKS = ["Products", "Solutions", "Resources", "Plans & Pricing"];
+
+const PRODUCTS = [
+  "Meetings",
+  "Recordings",
+  "Summaries",
+  "Hub",
+  "Whiteboards",
+  "Notes",
+  "Clips",
+  "Canvas",
+  "Paper",
+  "Sheets",
+  "Slides",
+  "Tasks",
+  "Scheduler",
+];
+
+const ACCOUNT_LINKS = ["My Account", "Admin", "Support"];
+
+function formatDateTime(value: string) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return "Date unavailable";
+
+  return date.toLocaleString(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function ChevronDown() {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      fill="currentColor"
+      aria-hidden="true"
+      className="h-3 w-3"
+    >
+      <path d="M5.5 7.5 10 12l4.5-4.5H5.5Z" />
+    </svg>
+  );
+}
+
+function CalendarIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className="h-8 w-8"
+    >
+      <rect x="3" y="5" width="18" height="16" rx="3" />
+      <path d="M8 3v4M16 3v4M3 10h18M12 14v4M10 16h4" />
+    </svg>
+  );
+}
+
+function JoinIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className="h-8 w-8"
+    >
+      <path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4" />
+      <path d="M10 8l4 4-4 4M14 12H4" />
+    </svg>
+  );
+}
+
+function VideoIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className="h-8 w-8"
+    >
+      <rect x="2" y="6" width="13" height="12" rx="3" />
+      <path d="m15 11 5-3.5v9L15 13z" />
+    </svg>
+  );
+}
+
+function Card({
+  className = "",
+  children,
+}: {
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section
+      className={`rounded-2xl border bg-white shadow-sm ${className}`}
+      style={{ borderColor: ZOOM.border }}
+    >
+      {children}
+    </section>
+  );
+}
+
+function QuickAction({
+  label,
+  color,
+  hoverColor,
+  icon,
+  onClick,
+  disabled,
+}: {
+  label: string;
+  color: string;
+  hoverColor: string;
+  icon: React.ReactNode;
+  onClick: () => void;
+  disabled?: boolean;
+}) {
+  const [hover, setHover] = useState(false);
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      className="text-center disabled:cursor-not-allowed disabled:opacity-60"
+    >
+      <div
+        className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl text-white transition-colors"
+        style={{ backgroundColor: hover && !disabled ? hoverColor : color }}
+      >
+        {icon}
+      </div>
+
+      <p className="mt-3 text-[15px]" style={{ color: ZOOM.ink }}>
+        {label}
+      </p>
+    </button>
+  );
+}
+
+function MeetingSkeleton() {
+  return (
+    <div
+      className="animate-pulse rounded-xl border p-5"
+      style={{ borderColor: ZOOM.border }}
+    >
+      <div className="h-4 w-1/3 rounded bg-gray-200" />
+      <div className="mt-3 h-3 w-1/2 rounded bg-gray-100" />
+      <div className="mt-2 h-3 w-1/4 rounded bg-gray-100" />
+    </div>
+  );
+}
 
 export default function Dashboard() {
   const router = useRouter();
 
   const [meetings, setMeetings] = useState<Meeting[]>([]);
+  const [now, setNow] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [starting, setStarting] = useState(false);
 
   useEffect(() => {
-    getMeetings().then((data) => {
-      setMeetings(data);
-      console.log(data);
-    });
+    let active = true;
+
+    getMeetings()
+      .then((data) => {
+        if (!active) return;
+
+        setNow(Date.now());
+        setMeetings(Array.isArray(data) ? data : []);
+      })
+      .catch(() => {
+        if (!active) return;
+
+        setError("Couldn't load your meetings. Please try again.");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
   }, []);
 
-  const now = new Date();
+  const { upcomingMeetings, recentMeetings } = useMemo(() => {
+    const time = (meeting: Meeting) => new Date(meeting.scheduled_at).getTime();
 
-  const upcomingMeetings = meetings.filter(
-    (meeting) => new Date(meeting.scheduled_at) > now,
-  );
-
-  const recentMeetings = meetings.filter(
-    (meeting) => new Date(meeting.scheduled_at) <= now,
-  );
+    return {
+      upcomingMeetings: meetings
+        .filter((meeting) => time(meeting) > now)
+        .sort((a, b) => time(a) - time(b)),
+      recentMeetings: meetings
+        .filter((meeting) => time(meeting) <= now)
+        .sort((a, b) => time(b) - time(a)),
+    };
+  }, [meetings, now]);
 
   const handleInstantMeeting = async () => {
-    const meeting = await createInstantMeeting();
+    if (starting) return;
 
-    router.push(`/meeting/${meeting.meeting_id}`);
+    setStarting(true);
+
+    try {
+      const meeting = await createInstantMeeting();
+
+      router.push(`/meeting/${meeting.meeting_id}`);
+    } catch {
+      setError("Couldn't start an instant meeting. Please try again.");
+      setStarting(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-[#f7f7f8]">
+    <div
+      className="min-h-screen min-w-[1280px]"
+      style={{ backgroundColor: ZOOM.page, color: ZOOM.ink }}
+    >
       {/* Top Utility Bar */}
-      <div className="h-10 bg-[#05052d] text-white flex items-center justify-end gap-8 px-8 text-md">
-        <span>Search</span>
-        <span>Support</span>
-        <span>0008000503335</span>
-        <span>Contact Sales</span>
-        <span>Request a Demo</span>
+      <div
+        className="flex h-10 items-center justify-end gap-8 px-8 text-sm text-white"
+        style={{ backgroundColor: ZOOM.navy }}
+      >
+        {UTILITY_LINKS.map((item) => (
+          <span key={item} className="cursor-pointer hover:underline">
+            {item}
+          </span>
+        ))}
       </div>
 
       {/* Main Navbar */}
-      <div className="h-[66px] bg-white border-b flex items-center justify-between px-4">
-        <div className="flex items-center gap-8">
-          <div className="text-5xl font-bold text-blue-600">zoom</div>
+      <header
+        className="flex h-[66px] items-center justify-between gap-4 border-b bg-white px-8"
+        style={{ borderColor: ZOOM.border }}
+      >
+        <div className="flex items-center gap-10">
+          <button
+            onClick={() => router.push("/")}
+            className="text-[30px] leading-none font-bold tracking-tight"
+            style={{ color: ZOOM.blue }}
+          >
+            zoom
+          </button>
 
-          <div className="flex items-center gap-10 text-gray-500 font-bold">
-            <span>Products</span>
-            <span>Solutions</span>
-            <span>Resources</span>
-            <span>Plans & Pricing</span>
-          </div>
+          <nav className="flex items-center gap-8 text-base">
+            {NAV_LINKS.map((item) => (
+              <span
+                key={item}
+                className="flex cursor-pointer items-center gap-1.5 hover:underline"
+              >
+                {item}
+              </span>
+            ))}
+          </nav>
         </div>
 
-        <div className="flex items-center gap-8 text-gray-700 font-semibold">
+        <div className="flex items-center gap-6 text-base">
           <button
             onClick={() => router.push("/schedule")}
-            className="hover:text-blue-600 transition"
+            className="hover:underline"
           >
             Schedule
           </button>
 
           <button
             onClick={() => router.push("/join")}
-            className="hover:text-blue-600 transition"
+            className="hover:underline"
           >
             Join
           </button>
 
           <button
             onClick={handleInstantMeeting}
-            className="hover:text-blue-600 transition"
+            disabled={starting}
+            className="flex items-center gap-1.5 hover:underline disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Host
-            <span className="text-xs"> ▼</span>
+            {starting ? "Starting…" : "Host"}
+            <ChevronDown />
           </button>
 
           <button
             onClick={() => router.push("/")}
-            className="hover:text-blue-600 transition"
+            className="flex items-center gap-1.5 hover:underline"
           >
             Web App
-            <span className="text-xs"> ▼</span>
+            <ChevronDown />
           </button>
 
-          <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-            <span className="text-gray-600 font-medium">T</span>
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-300 text-gray-600">
+            T
           </div>
         </div>
-      </div>
+      </header>
 
       {/* Main Layout */}
       <div className="flex">
         {/* Sidebar */}
-        <aside className="w-[300px] bg-[#fcfcfd] border-r min-h-[calc(100vh-116px)]">
+        <aside
+          className="sticky top-0 h-screen w-[300px] shrink-0 overflow-y-auto border-r py-3"
+          style={{ backgroundColor: ZOOM.rail, borderColor: ZOOM.border }}
+        >
           <button
             onClick={() => router.push("/")}
-            className="w-full text-left bg-[#eaf2ff] text-blue-600 px-10 py-3 font-medium"
+            className="w-full px-10 py-3 text-left text-base font-medium"
+            style={{ backgroundColor: ZOOM.blueTint, color: ZOOM.blue }}
           >
             Home
           </button>
 
-          <div className="p-8">
-            <p className="text-gray-500 text-sm mb-6">My Products</p>
+          <div className="px-10 py-8">
+            <p className="mb-5 text-sm" style={{ color: ZOOM.muted }}>
+              My Products
+            </p>
 
-            <div className="space-y-5 text-[18px] text-gray-800">
-              <button
-                onClick={() => router.push("/")}
-                className="text-left hover:text-blue-600 transition"
-              >
-                Meetings
+            <nav className="flex flex-col items-start gap-4 text-base">
+              {PRODUCTS.map((product) => (
+                <button
+                  key={product}
+                  onClick={
+                    product === "Meetings" ? () => router.push("/") : undefined
+                  }
+                  className="text-left hover:underline"
+                >
+                  {product}
+                </button>
+              ))}
+
+              <button className="text-left hover:underline">
+                Discover More Products
               </button>
-              <div>Recordings</div>
-              <div>Summaries</div>
-              <div>Hub</div>
-              <div>Whiteboards</div>
-              <div>Notes</div>
-              <div>Clips</div>
-              <div>Canvas</div>
-              <div>Paper</div>
-              <div>Sheets</div>
-              <div>Slides</div>
-              <div>Tasks</div>
-              <div>Scheduler</div>
-              <div>Discover More Products</div>
-            </div>
+            </nav>
 
-            <div className="mt-16 space-y-6 text-gray-800">
-              <div>My Account</div>
-              <div>Admin</div>
-              <div>Support</div>
-            </div>
+            <nav className="mt-12 flex flex-col items-start gap-4 text-base">
+              {ACCOUNT_LINKS.map((link) => (
+                <button key={link} className="text-left hover:underline">
+                  {link}
+                </button>
+              ))}
+            </nav>
           </div>
         </aside>
 
         {/* Center + Right */}
-        <div className="flex flex-1 gap-6 p-8">
+        <div className="flex flex-1 items-start gap-6 p-8">
           {/* Center Section */}
-          <div className="flex-1 space-y-6">
+          <div className="min-w-0 flex-1 space-y-6">
+            {error && (
+              <div className="rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
+                {error}
+              </div>
+            )}
+
             {/* Profile Card */}
-            <div className="bg-white rounded-2xl p-8 shadow-sm border">
-              <div className="flex items-center justify-between">
-                <div className="flex gap-5 items-center">
-                  <div className="h-20 w-20 rounded-2xl bg-gray-300"></div>
+            <Card className="p-8">
+              <div className="flex items-center justify-between gap-6">
+                <div className="flex items-center gap-5">
+                  <div className="h-20 w-20 rounded-2xl bg-gray-300" />
 
                   <div>
-                    <h2 className="text-4xl font-semibold">Tejasvita</h2>
+                    <h2 className="text-2xl font-semibold">Tejasvita</h2>
 
-                    <p className="text-gray-600 mt-2">Plan: Workplace Basic</p>
+                    <p
+                      className="mt-1.5 text-base"
+                      style={{ color: ZOOM.muted }}
+                    >
+                      Plan: Workplace Basic
+                    </p>
                   </div>
                 </div>
 
                 <div className="text-right">
-                  <button className="bg-gray-100 rounded-full px-8 py-3 text-blue-600">
+                  <button
+                    className="rounded-full bg-gray-100 px-7 py-2.5 text-base transition hover:bg-gray-200"
+                    style={{ color: ZOOM.blue }}
+                  >
                     Manage Plan
                   </button>
 
-                  <p className="mt-4 text-blue-600">View Plan Details</p>
+                  <p
+                    className="mt-3 cursor-pointer text-sm hover:underline"
+                    style={{ color: ZOOM.blue }}
+                  >
+                    View Plan Details
+                  </p>
                 </div>
               </div>
-            </div>
+            </Card>
 
             {/* Promo Card */}
-            <div className="bg-white rounded-2xl p-10 shadow-sm border">
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="text-blue-600 font-semibold">Workplace Pro</p>
+            <Card className="p-8">
+              <div className="flex items-center justify-between gap-8">
+                <div className="min-w-0">
+                  <p
+                    className="text-base font-semibold"
+                    style={{ color: ZOOM.blue }}
+                  >
+                    Workplace Pro
+                  </p>
 
-                  <h2 className="text-5xl font-bold mt-3">Upgrade and save!</h2>
+                  <h2 className="mt-2 text-[32px] leading-tight font-bold">
+                    Upgrade and save!
+                  </h2>
 
-                  <p className="text-gray-500 mt-4 max-w-lg">
+                  <p
+                    className="mt-3 max-w-lg text-base"
+                    style={{ color: ZOOM.muted }}
+                  >
                     Unlock savings up to 16% when you select an annual Zoom
                     Workplace Pro plan.
                   </p>
 
-                  <button className="mt-8 bg-blue-600 text-white px-8 py-3 rounded-xl">
+                  <button
+                    className="mt-6 rounded-lg px-6 py-3 text-base font-medium text-white transition"
+                    style={{ backgroundColor: ZOOM.blue }}
+                  >
                     Upgrade today
                   </button>
                 </div>
 
-                <div className="w-[260px] h-[220px] rounded-3xl bg-blue-700"></div>
+                <div
+                  className="h-[200px] w-[260px] shrink-0 rounded-3xl"
+                  style={{
+                    background: `linear-gradient(135deg, ${ZOOM.blue}, #0b2fa8)`,
+                  }}
+                />
               </div>
-            </div>
+            </Card>
 
-            {/* Recent Activity */}
             {/* Upcoming Meetings */}
-            <div className="bg-white rounded-2xl p-8 shadow-sm border">
-              <h2 className="text-4xl font-semibold mb-8">Upcoming Meetings</h2>
+            <Card className="p-8">
+              <h2 className="text-2xl font-semibold">Upcoming Meetings</h2>
 
-              {upcomingMeetings.length === 0 ? (
-                <p className="text-gray-500">No upcoming meetings.</p>
-              ) : (
-                <div className="space-y-4">
-                  {upcomingMeetings.map((meeting) => (
+              <div className="mt-6 space-y-4">
+                {loading ? (
+                  <>
+                    <MeetingSkeleton />
+                    <MeetingSkeleton />
+                  </>
+                ) : upcomingMeetings.length === 0 ? (
+                  <p className="text-base" style={{ color: ZOOM.muted }}>
+                    No upcoming meetings.{" "}
+                    <button
+                      onClick={() => router.push("/schedule")}
+                      className="hover:underline"
+                      style={{ color: ZOOM.blue }}
+                    >
+                      Schedule a meeting
+                    </button>
+                  </p>
+                ) : (
+                  upcomingMeetings.map((meeting) => (
                     <div
                       key={meeting.id}
-                      className="rounded-xl border border-gray-200 p-5"
+                      className="flex items-start justify-between gap-4 rounded-xl border p-5"
+                      style={{ borderColor: ZOOM.border }}
                     >
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h3 className="text-xl font-semibold text-gray-900">
-                            {meeting.title}
-                          </h3>
+                      <div className="min-w-0">
+                        <h3 className="truncate text-xl font-semibold">
+                          {meeting.title}
+                        </h3>
 
-                          {meeting.description && (
-                            <p className="mt-1 text-sm text-gray-500">
-                              {meeting.description}
-                            </p>
-                          )}
-
-                          <p className="mt-3 text-sm text-gray-600">
-                            {new Date(meeting.scheduled_at).toLocaleString()}
+                        {meeting.description && (
+                          <p
+                            className="mt-1 line-clamp-2 text-sm"
+                            style={{ color: ZOOM.muted }}
+                          >
+                            {meeting.description}
                           </p>
+                        )}
 
-                          <p className="mt-1 text-sm text-gray-500">
-                            Duration: {meeting.duration} minutes
-                          </p>
-                        </div>
+                        <p className="mt-3 text-sm" style={{ color: ZOOM.ink }}>
+                          {formatDateTime(meeting.scheduled_at)}
+                        </p>
 
-                        <button
-                          onClick={() =>
-                            router.push(`/meeting/${meeting.meeting_id}`)
-                          }
-                          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white"
+                        <p
+                          className="mt-1 text-sm"
+                          style={{ color: ZOOM.muted }}
                         >
-                          Join
-                        </button>
+                          Duration: {meeting.duration} minutes
+                        </p>
                       </div>
+
+                      <button
+                        onClick={() =>
+                          router.push(`/meeting/${meeting.meeting_id}`)
+                        }
+                        className="rounded-md px-5 py-2 text-sm font-medium text-white transition"
+                        style={{ backgroundColor: ZOOM.blue }}
+                      >
+                        Join
+                      </button>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                  ))
+                )}
+              </div>
+            </Card>
 
             {/* Recent Meetings */}
-            <div className="bg-white rounded-2xl p-8 shadow-sm border">
-              <h2 className="text-4xl font-semibold mb-8">Recent Meetings</h2>
+            <Card className="p-8">
+              <h2 className="text-2xl font-semibold">Recent Meetings</h2>
 
-              {recentMeetings.length === 0 ? (
-                <p className="text-gray-500">No recent meetings.</p>
-              ) : (
-                <div className="space-y-4">
-                  {recentMeetings.map((meeting) => (
+              <div className="mt-6 space-y-4">
+                {loading ? (
+                  <>
+                    <MeetingSkeleton />
+                    <MeetingSkeleton />
+                  </>
+                ) : recentMeetings.length === 0 ? (
+                  <p className="text-base" style={{ color: ZOOM.muted }}>
+                    No recent meetings.
+                  </p>
+                ) : (
+                  recentMeetings.map((meeting) => (
                     <div
                       key={meeting.id}
-                      className="rounded-xl border border-gray-200 p-5"
+                      className="rounded-xl border p-5"
+                      style={{ borderColor: ZOOM.border }}
                     >
-                      <h3 className="text-xl font-semibold text-gray-900">
+                      <h3 className="truncate text-xl font-semibold">
                         {meeting.title}
                       </h3>
 
                       {meeting.description && (
-                        <p className="mt-1 text-sm text-gray-500">
+                        <p
+                          className="mt-1 line-clamp-2 text-sm"
+                          style={{ color: ZOOM.muted }}
+                        >
                           {meeting.description}
                         </p>
                       )}
 
-                      <p className="mt-3 text-sm text-gray-600">
-                        {new Date(meeting.scheduled_at).toLocaleString()}
+                      <p className="mt-3 text-sm" style={{ color: ZOOM.ink }}>
+                        {formatDateTime(meeting.scheduled_at)}
                       </p>
 
-                      <p className="mt-1 text-sm text-gray-500">
+                      <p className="mt-1 text-sm" style={{ color: ZOOM.muted }}>
                         Meeting ID: {meeting.meeting_id}
                       </p>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                  ))
+                )}
+              </div>
+            </Card>
           </div>
 
           {/* Right Panel */}
-          <div className="w-[360px] space-y-6">
+          <div className="w-[360px] shrink-0 space-y-6">
             {/* Quick Actions */}
-            <div className="bg-white rounded-2xl p-8 border shadow-sm">
+            <Card className="p-8">
               <div className="grid grid-cols-3 gap-4">
-                {/* Schedule */}
-                <button
-                  type="button"
+                <QuickAction
+                  label="Schedule"
+                  color={ZOOM.blue}
+                  hoverColor={ZOOM.blueHover}
+                  icon={<CalendarIcon />}
                   onClick={() => router.push("/schedule")}
-                  className="group text-center"
-                >
-                  <div className="h-16 w-16 rounded-2xl bg-blue-600 mx-auto flex items-center justify-center text-white text-xl transition group-hover:bg-blue-700">
-                    +
-                  </div>
+                />
 
-                  <p className="mt-3 font-medium text-gray-800">Schedule</p>
-                </button>
-
-                {/* Join */}
-                <button
-                  type="button"
+                <QuickAction
+                  label="Join"
+                  color={ZOOM.blue}
+                  hoverColor={ZOOM.blueHover}
+                  icon={<JoinIcon />}
                   onClick={() => router.push("/join")}
-                  className="group text-center"
-                >
-                  <div className="h-16 w-16 rounded-2xl bg-blue-600 mx-auto flex items-center justify-center text-white text-xl transition group-hover:bg-blue-700">
-                    →
-                  </div>
+                />
 
-                  <p className="mt-3 font-medium text-gray-800">Join</p>
-                </button>
-
-                {/* New Meeting */}
-                <button
-                  type="button"
+                <QuickAction
+                  label={starting ? "Starting…" : "New Meeting"}
+                  color={ZOOM.orange}
+                  hoverColor={ZOOM.orangeHover}
+                  icon={<VideoIcon />}
                   onClick={handleInstantMeeting}
-                  className="group text-center"
-                >
-                  <div className="h-16 w-16 rounded-2xl bg-orange-500 mx-auto flex items-center justify-center text-white text-xl transition group-hover:bg-orange-600">
-                    ▶
-                  </div>
-
-                  <p className="mt-3 font-medium text-gray-800">New Meeting</p>
-                </button>
+                  disabled={starting}
+                />
               </div>
 
-              <div className="mt-10 text-center border-t pt-8">
-                <h3 className="font-semibold text-xl">Personal Meeting ID</h3>
+              <div
+                className="mt-8 border-t pt-6 text-center"
+                style={{ borderColor: ZOOM.border }}
+              >
+                <h3 className="text-base font-semibold">Personal Meeting ID</h3>
 
-                <p className="mt-3 text-lg text-gray-600">937 337 3571</p>
+                <p className="mt-2 text-base" style={{ color: ZOOM.muted }}>
+                  937 337 3571
+                </p>
               </div>
-            </div>
+            </Card>
 
             {/* Meetings Card */}
-            <div className="bg-white rounded-2xl p-8 border shadow-sm">
-              <div className="flex justify-between items-center">
-                <h2 className="text-3xl font-semibold">Meetings</h2>
+            <Card className="p-8">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-semibold">Meetings</h2>
 
                 <button
                   onClick={() => router.push("/schedule")}
-                  className="text-blue-600 text-sm font-medium"
+                  className="text-sm font-medium hover:underline"
+                  style={{ color: ZOOM.blue }}
                 >
                   Schedule
                 </button>
               </div>
 
-              <div className="mt-6 bg-gray-100 rounded-lg p-3 text-sm text-gray-600">
+              <div
+                className="mt-5 rounded-lg bg-gray-100 px-4 py-2.5 text-sm"
+                style={{ color: ZOOM.ink }}
+              >
                 Upcoming
               </div>
 
-              {upcomingMeetings.length === 0 ? (
-                <p className="mt-6 text-gray-500">No upcoming meetings.</p>
-              ) : (
-                <div className="mt-6 space-y-4">
-                  {upcomingMeetings.slice(0, 2).map((meeting) => (
-                    <div key={meeting.id} className="border rounded-2xl p-5">
-                      <h3 className="text-blue-600 text-xl font-medium">
+              <div className="mt-5 space-y-4">
+                {loading ? (
+                  <MeetingSkeleton />
+                ) : upcomingMeetings.length === 0 ? (
+                  <p className="text-base" style={{ color: ZOOM.muted }}>
+                    No upcoming meetings.
+                  </p>
+                ) : (
+                  upcomingMeetings.slice(0, 2).map((meeting) => (
+                    <div
+                      key={meeting.id}
+                      className="rounded-2xl border p-5"
+                      style={{ borderColor: ZOOM.border }}
+                    >
+                      <h3
+                        className="truncate text-lg font-medium"
+                        style={{ color: ZOOM.blue }}
+                      >
                         {meeting.title}
                       </h3>
 
-                      <p className="mt-3 font-semibold">
-                        {new Date(meeting.scheduled_at).toLocaleString()}
+                      <p className="mt-2 text-base font-semibold">
+                        {formatDateTime(meeting.scheduled_at)}
                       </p>
 
-                      <p className="mt-3 text-gray-500">
+                      <p className="mt-2 text-sm" style={{ color: ZOOM.muted }}>
                         Meeting ID: {meeting.meeting_id}
                       </p>
 
@@ -364,15 +691,16 @@ export default function Dashboard() {
                         onClick={() =>
                           router.push(`/meeting/${meeting.meeting_id}`)
                         }
-                        className="mt-5 bg-gray-100 rounded-xl px-4 py-2 text-blue-600 hover:bg-blue-50"
+                        className="mt-4 rounded-xl bg-gray-100 px-5 py-2 text-sm font-medium transition hover:bg-blue-50"
+                        style={{ color: ZOOM.blue }}
                       >
                         Join
                       </button>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                  ))
+                )}
+              </div>
+            </Card>
           </div>
         </div>
       </div>
