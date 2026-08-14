@@ -19,7 +19,10 @@ app.include_router(meetings_router)
 app.add_middleware(
     CORSMiddleware,
     # tells fastAPI to allow requestis coming from the next.js frontend
-    allow_origins = ["http://localhost:3000"],
+    allow_origins = [
+        "http://localhost:3000",
+        "https://zoom-clone-2-mu.vercel.app",
+    ],
     # allows my frontend specifically
     allow_credentials = True,
     # allows creds s.a. cookies, auth info
