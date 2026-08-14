@@ -180,22 +180,22 @@ def seed_database():
         ),
     ]
 
-        existing_ids = {
-            meeting.meeting_id
-            for meeting in db.query(Meeting).all()
-        }
+    existing_ids = {
+        meeting.meeting_id
+        for meeting in db.query(Meeting).all()
+    }
 
-        new_meetings = [
-            meeting
-            for meeting in meetings
-            if meeting.meeting_id not in existing_ids
-        ]
+    new_meetings = [
+        meeting
+        for meeting in meetings
+        if meeting.meeting_id not in existing_ids
+    ]
 
-        if new_meetings:
-            db.add_all(new_meetings)
-            db.commit()
+    if new_meetings:
+        db.add_all(new_meetings)
+        db.commit()
 
-        print(f"Added {len(new_meetings)} new seed meetings.")
+    print(f"Added {len(new_meetings)} new seed meetings.")
 
 
 seed_database()
