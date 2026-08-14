@@ -20,14 +20,19 @@ export default function SchedulePage() {
       return;
     }
 
-    const meeting = await createMeeting({
-      title,
-      description,
-      scheduled_at: scheduledAt,
-      duration,
-    });
+    try {
+      await createMeeting({
+        title,
+        description,
+        scheduled_at: scheduledAt,
+        duration,
+      });
 
-    router.push(`/meeting/${meeting.meeting_id}`);
+      router.replace("/");
+    } catch (error) {
+      console.error("Failed to schedule meeting:", error);
+      alert("Failed to schedule meeting");
+    }
   };
 
   return (
