@@ -3,34 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { getMeetings, Meeting, createInstantMeeting } from "@/app/lib/api";
 import { useRouter } from "next/navigation";
-
-/**
- * Zoom brand palette (approximated — the signed-in portal is behind auth).
- * Kept here so every surface uses the same values.
- */
-const ZOOM = {
-  blue: "#0b5cff",
-  blueHover: "#0442c4",
-  blueTint: "#eaf2ff",
-  orange: "#ff6d2f",
-  orangeHover: "#e85d22",
-  navy: "#05052d",
-  ink: "#131619",
-  muted: "#6e7680",
-  border: "#e5e5e9",
-  page: "#f7f7f8",
-  rail: "#fcfcfd",
-};
-
-const UTILITY_LINKS = [
-  "Search",
-  "Support",
-  "0008000503335",
-  "Contact Sales",
-  "Request a Demo",
-];
-
-const NAV_LINKS = ["Products", "Solutions", "Resources", "Plans & Pricing"];
+import { ZOOM } from "@/app/lib/theme";
+import PortalHeader from "@/app/components/PortalHeader";
 
 const PRODUCTS = [
   "Meetings",
@@ -62,19 +36,6 @@ function formatDateTime(value: string) {
     hour: "numeric",
     minute: "2-digit",
   });
-}
-
-function ChevronDown() {
-  return (
-    <svg
-      viewBox="0 0 20 20"
-      fill="currentColor"
-      aria-hidden="true"
-      className="h-3 w-3"
-    >
-      <path d="M5.5 7.5 10 12l4.5-4.5H5.5Z" />
-    </svg>
-  );
 }
 
 function CalendarIcon() {
@@ -267,81 +228,7 @@ export default function Dashboard() {
       className="min-h-screen min-w-[1280px]"
       style={{ backgroundColor: ZOOM.page, color: ZOOM.ink }}
     >
-      {/* Top Utility Bar */}
-      <div
-        className="flex h-10 items-center justify-end gap-8 px-8 text-sm text-white"
-        style={{ backgroundColor: ZOOM.navy }}
-      >
-        {UTILITY_LINKS.map((item) => (
-          <span key={item} className="cursor-pointer hover:underline">
-            {item}
-          </span>
-        ))}
-      </div>
-
-      {/* Main Navbar */}
-      <header
-        className="flex h-[66px] items-center justify-between gap-4 border-b bg-white px-8"
-        style={{ borderColor: ZOOM.border }}
-      >
-        <div className="flex items-center gap-10">
-          <button
-            onClick={() => router.push("/")}
-            className="text-[30px] leading-none font-bold tracking-tight"
-            style={{ color: ZOOM.blue }}
-          >
-            zoom
-          </button>
-
-          <nav className="flex items-center gap-8 text-base">
-            {NAV_LINKS.map((item) => (
-              <span
-                key={item}
-                className="flex cursor-pointer items-center gap-1.5 hover:underline"
-              >
-                {item}
-              </span>
-            ))}
-          </nav>
-        </div>
-
-        <div className="flex items-center gap-6 text-base">
-          <button
-            onClick={() => router.push("/schedule")}
-            className="hover:underline"
-          >
-            Schedule
-          </button>
-
-          <button
-            onClick={() => router.push("/join")}
-            className="hover:underline"
-          >
-            Join
-          </button>
-
-          <button
-            onClick={handleInstantMeeting}
-            disabled={starting}
-            className="flex items-center gap-1.5 hover:underline disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {starting ? "Starting…" : "Host"}
-            <ChevronDown />
-          </button>
-
-          <button
-            onClick={() => router.push("/")}
-            className="flex items-center gap-1.5 hover:underline"
-          >
-            Web App
-            <ChevronDown />
-          </button>
-
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-300 text-gray-600">
-            T
-          </div>
-        </div>
-      </header>
+      <PortalHeader onHost={handleInstantMeeting} starting={starting} />
 
       {/* Main Layout */}
       <div className="flex">
