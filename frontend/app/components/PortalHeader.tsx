@@ -27,13 +27,7 @@ export function ChevronDown() {
 }
 
 /** The zoom.us chrome: navy utility bar above the white product navbar. */
-export default function PortalHeader({
-  onHost,
-  starting,
-}: {
-  onHost: () => void;
-  starting?: boolean;
-}) {
+export default function PortalHeader() {
   const router = useRouter();
 
   return (
@@ -92,11 +86,10 @@ export default function PortalHeader({
           </button>
 
           <button
-            onClick={onHost}
-            disabled={starting}
-            className="flex items-center gap-1.5 hover:underline disabled:cursor-not-allowed disabled:opacity-60"
+            onClick={() => router.push("/host")}
+            className="flex items-center gap-1.5 hover:underline"
           >
-            {starting ? "Starting…" : "Host"}
+            Host
             <ChevronDown />
           </button>
 

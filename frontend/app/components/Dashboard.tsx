@@ -216,7 +216,7 @@ export default function Dashboard() {
     try {
       const meeting = await createInstantMeeting();
 
-      router.push(`/meeting/${meeting.meeting_id}`);
+      router.push(`/meeting/${meeting.meeting_id}/start?instant=1`);
     } catch {
       setError("Couldn't start an instant meeting. Please try again.");
       setStarting(false);
@@ -228,7 +228,7 @@ export default function Dashboard() {
       className="min-h-screen min-w-[1280px]"
       style={{ backgroundColor: ZOOM.page, color: ZOOM.ink }}
     >
-      <PortalHeader onHost={handleInstantMeeting} starting={starting} />
+      <PortalHeader />
 
       {/* Main Layout */}
       <div className="flex">
@@ -420,12 +420,12 @@ export default function Dashboard() {
 
                       <button
                         onClick={() =>
-                          router.push(`/meeting/${meeting.meeting_id}`)
+                          router.push(`/meeting/${meeting.meeting_id}/start`)
                         }
                         className="rounded-md px-5 py-2 text-sm font-medium text-white transition"
                         style={{ backgroundColor: ZOOM.blue }}
                       >
-                        Join
+                        Start
                       </button>
                     </div>
                   ))
@@ -576,12 +576,12 @@ export default function Dashboard() {
 
                       <button
                         onClick={() =>
-                          router.push(`/meeting/${meeting.meeting_id}`)
+                          router.push(`/meeting/${meeting.meeting_id}/start`)
                         }
                         className="mt-4 rounded-xl bg-gray-100 px-5 py-2 text-sm font-medium transition hover:bg-blue-50"
                         style={{ color: ZOOM.blue }}
                       >
-                        Join
+                        Start
                       </button>
                     </div>
                   ))

@@ -13,6 +13,14 @@ export type Meeting = {
   created_at: string;
 };
 
+export type Participant = {
+  id: number;
+  meeting_id: number;
+  display_name: string;
+  joined_at: string;
+  left_at: string | null;
+};
+
 export async function getMeetings(): Promise<Meeting[]> {
   const response = await fetch(`${API_URL}/meetings`);
 
@@ -51,7 +59,9 @@ export async function joinMeeting(
   return response.json();
 }
 
-export async function getParticipants(meetingId: string) {
+export async function getParticipants(
+  meetingId: string
+): Promise<Participant[]> {
   const response = await fetch(
     `${API_URL}/meetings/${meetingId}/participants`
   );

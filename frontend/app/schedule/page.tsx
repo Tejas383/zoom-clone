@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useSyncExternalStore } from "react";
-import { createMeeting, createInstantMeeting } from "@/app/lib/api";
+import { createMeeting } from "@/app/lib/api";
 import { useRouter } from "next/navigation";
 import { ZOOM } from "@/app/lib/theme";
 import PortalHeader from "@/app/components/PortalHeader";
@@ -210,7 +210,6 @@ export default function SchedulePage() {
 
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
-  const [starting, setStarting] = useState(false);
 
   const localZone = useLocalTimeZone();
   const today = useToday();
@@ -226,21 +225,6 @@ export default function SchedulePage() {
       ? TIME_ZONES
       : [{ value: localZone, label: localZone }, ...TIME_ZONES];
   }, [localZone]);
-
-  const handleInstantMeeting = async () => {
-    if (starting) return;
-
-    setStarting(true);
-
-    try {
-      const meeting = await createInstantMeeting();
-
-      router.push(`/meeting/${meeting.meeting_id}`);
-    } catch {
-      setError("Couldn't start an instant meeting. Please try again.");
-      setStarting(false);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -286,7 +270,7 @@ export default function SchedulePage() {
       className="min-h-screen min-w-[1280px] bg-white"
       style={{ color: ZOOM.ink }}
     >
-      <PortalHeader onHost={handleInstantMeeting} starting={starting} />
+      <PortalHeader />
 
       <div className="flex">
         {/* Portal Sidebar */}
