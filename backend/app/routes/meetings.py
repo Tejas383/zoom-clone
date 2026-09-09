@@ -27,6 +27,7 @@ def update_meeting_status(meeting: Meeting):
 
 @router.post("/meetings", response_model=MeetingResponse)
 # format the response from this request using MeetingResponse (schema)
+# route handler / endpoint function
 def create_meeting(
     meeting: MeetingCreate,
     # the meeting param must be a MeetingCreate Object

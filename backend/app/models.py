@@ -25,3 +25,4 @@ class Participant(Base):
     display_name = Column(String, nullable=False)
     joined_at = Column(DateTime, nullable=False)
     left_at = Column(DateTime)
+

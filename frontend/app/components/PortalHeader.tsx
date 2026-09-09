@@ -34,7 +34,7 @@ export default function PortalHeader() {
     <>
       {/* Top Utility Bar */}
       <div
-        className="flex h-10 items-center justify-end gap-8 px-8 text-sm text-white"
+        className="flex h-10 items-center justify-end gap-8 px-8 text-sm text-white sticky top-0"
         style={{ backgroundColor: ZOOM.navy }}
       >
         {UTILITY_LINKS.map((item) => (
@@ -46,7 +46,7 @@ export default function PortalHeader() {
 
       {/* Main Navbar */}
       <header
-        className="flex h-[66px] items-center justify-between gap-4 border-b bg-white px-8"
+        className="flex h-[66px] items-center justify-between gap-4 border-b bg-white px-8 sticky top-10"
         style={{ borderColor: ZOOM.border }}
       >
         <div className="flex items-center gap-10">

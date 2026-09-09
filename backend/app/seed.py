@@ -14,7 +14,7 @@ def seed_database():
     meetings = [
         # Upcoming meetings
         Meeting(
-            meeting_id="123456789",
+            meeting_id="12345678",
             title="Team Standup",
             description="Daily project team meeting",
             scheduled_at=now + timedelta(hours=1),
@@ -25,7 +25,7 @@ def seed_database():
         ),
 
         Meeting(
-            meeting_id="234567890",
+            meeting_id="23456789",
             title="Project Discussion",
             description="Discuss upcoming project milestones",
             scheduled_at=now + timedelta(hours=3),
@@ -36,7 +36,7 @@ def seed_database():
         ),
 
         Meeting(
-            meeting_id="345678901",
+            meeting_id="34567890",
             title="Frontend Development",
             description="Discuss frontend implementation and UI improvements",
             scheduled_at=now + timedelta(hours=5),
@@ -47,7 +47,7 @@ def seed_database():
         ),
 
         Meeting(
-            meeting_id="456789012",
+            meeting_id="45678901",
             title="Backend API Review",
             description="Review FastAPI endpoints and database integration",
             scheduled_at=now + timedelta(days=1),
@@ -58,7 +58,7 @@ def seed_database():
         ),
 
         Meeting(
-            meeting_id="567890123",
+            meeting_id="56789012",
             title="Database Design Meeting",
             description="Review database schema and relationships",
             scheduled_at=now + timedelta(days=1, hours=3),
@@ -69,7 +69,7 @@ def seed_database():
         ),
 
         Meeting(
-            meeting_id="678901234",
+            meeting_id="67890123",
             title="Sprint Planning",
             description="Plan tasks and deliverables for the next sprint",
             scheduled_at=now + timedelta(days=2),
@@ -80,7 +80,7 @@ def seed_database():
         ),
 
         Meeting(
-            meeting_id="789012345",
+            meeting_id="78901234",
             title="Design Review",
             description="Review the latest dashboard and meeting room designs",
             scheduled_at=now + timedelta(days=3),
@@ -91,7 +91,7 @@ def seed_database():
         ),
 
         Meeting(
-            meeting_id="890123456",
+            meeting_id="89012345",
             title="Weekly Team Meeting",
             description="Weekly discussion about project progress",
             scheduled_at=now + timedelta(days=4),
@@ -102,7 +102,7 @@ def seed_database():
         ),
 
         Meeting(
-            meeting_id="901234567",
+            meeting_id="90123456",
             title="Client Presentation",
             description="Present the latest project progress to the client",
             scheduled_at=now + timedelta(days=5),
@@ -113,7 +113,7 @@ def seed_database():
         ),
 
         Meeting(
-            meeting_id="912345678",
+            meeting_id="91234567",
             title="Team Retrospective",
             description="Discuss what went well and what can be improved",
             scheduled_at=now + timedelta(days=7),
@@ -125,7 +125,7 @@ def seed_database():
 
         # Recent / completed meetings
         Meeting(
-            meeting_id="812345678",
+            meeting_id="81234567",
             title="Sprint Review",
             description="Review completed sprint work",
             scheduled_at=now - timedelta(hours=2),
@@ -136,7 +136,7 @@ def seed_database():
         ),
 
         Meeting(
-            meeting_id="712345678",
+            meeting_id="71234567",
             title="Code Review",
             description="Review recently submitted code changes",
             scheduled_at=now - timedelta(hours=6),
@@ -147,7 +147,7 @@ def seed_database():
         ),
 
         Meeting(
-            meeting_id="612345678",
+            meeting_id="61234567",
             title="Project Kickoff",
             description="Initial project planning and team introduction",
             scheduled_at=now - timedelta(days=1),
@@ -158,7 +158,7 @@ def seed_database():
         ),
 
         Meeting(
-            meeting_id="512345678",
+            meeting_id="51234567",
             title="Requirements Gathering",
             description="Discuss project requirements and expected features",
             scheduled_at=now - timedelta(days=2),
@@ -169,7 +169,7 @@ def seed_database():
         ),
 
         Meeting(
-            meeting_id="412345678",
+            meeting_id="41234567",
             title="Architecture Discussion",
             description="Discuss application architecture and technology choices",
             scheduled_at=now - timedelta(days=4),

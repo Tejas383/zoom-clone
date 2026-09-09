@@ -1,3 +1,5 @@
+# entrypoint for the backend
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -18,7 +20,7 @@ app.include_router(meetings_router)
 
 app.add_middleware(
     CORSMiddleware,
-    # tells fastAPI to allow requestis coming from the next.js frontend
+    # tells fastAPI to allow requests coming from the next.js frontend
     allow_origins = [
         "http://localhost:3000",
         "https://zoom-clone-2-mu.vercel.app",

@@ -5,6 +5,7 @@ import { getMeetings, Meeting, createInstantMeeting } from "@/app/lib/api";
 import { useRouter } from "next/navigation";
 import { ZOOM } from "@/app/lib/theme";
 import PortalHeader from "@/app/components/PortalHeader";
+import PortalFooter from "@/app/components/PortalFooter";
 
 const PRODUCTS = [
   "Meetings",
@@ -234,7 +235,7 @@ export default function Dashboard() {
       <div className="flex">
         {/* Sidebar */}
         <aside
-          className="sticky top-0 h-screen w-[300px] shrink-0 overflow-y-auto border-r py-3"
+          className="sticky top-26.5 h-screen w-[300px] shrink-0 overflow-y-auto border-r py-3"
           style={{ backgroundColor: ZOOM.rail, borderColor: ZOOM.border }}
         >
           <button
@@ -591,6 +592,8 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      <PortalFooter />
     </div>
   );
 }
