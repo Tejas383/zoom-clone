@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Meeting, Participant, getParticipants } from "@/app/lib/api";
+import {
+  Meeting,
+  Participant,
+  getParticipants,
+  toggleMuteParticipant,
+  muteAllParticipants,
+  removeParticipant,
+} from "@/app/lib/api";
 import { useRouter } from "next/navigation";
 import MeetingShell, { EndedNotice, Panel, Stage } from "../MeetingShell";
 
@@ -61,6 +68,50 @@ export default function HostRoom({
   if (meeting.status === "ended") {
     return <EndedNotice onBack={() => router.push("/")} />;
   }
+
+  const handleToggleMute = async (participantId: number) => {
+    try {
+      const updatedParticipant = await toggleMuteParticipant(
+        meeting.meeting_id,
+        participantId,
+      );
+
+      setParticipants((current) =>
+        current.map((participant) =>
+          participant.id === participantId ? updatedParticipant : participant,
+        ),
+      );
+    } catch {
+      // Keep the current roster if the request fails.
+    }
+  };
+
+  const handleMuteAll = async () => {
+    try {
+      const updatedParticipants = await muteAllParticipants(meeting.meeting_id);
+
+      setParticipants(updatedParticipants);
+    } catch {
+      // Keep the current roster if the request fails.
+    }
+  };
+
+  const handleRemove = async (participantId: number) => {
+    try {
+      const updatedParticipant = await removeParticipant(
+        meeting.meeting_id,
+        participantId,
+      );
+
+      setParticipants((current) =>
+        current.map((participant) =>
+          participant.id === participantId ? updatedParticipant : participant,
+        ),
+      );
+    } catch {
+      // Keep the current roster if the request fails.
+    }
+  };
 
   return (
     <MeetingShell
@@ -133,10 +184,38 @@ export default function HostRoom({
                   key={participant.id}
                   className="flex items-center justify-between rounded-lg bg-white/5 px-4 py-3 text-sm"
                 >
-                  <span>{participant.display_name}</span>
+                  <div className="flex items-center gap-3">
+                    <span>{participant.display_name}</span>
 
-                  {participant.left_at && (
-                    <span className="text-xs text-gray-500">Left</span>
+                    {participant.state === "muted" && (
+                      <span className="text-xs text-gray-500">Muted</span>
+                    )}
+
+                    {participant.state === "removed" && (
+                      <span className="text-xs text-red-400">Removed</span>
+                    )}
+
+                    {participant.left_at && participant.state !== "removed" && (
+                      <span className="text-xs text-gray-500">Left</span>
+                    )}
+                  </div>
+
+                  {!participant.left_at && participant.state !== "removed" && (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleToggleMute(participant.id)}
+                        className="rounded-lg bg-[#29292f] px-3 py-1.5 text-xs font-medium transition hover:bg-[#35353c]"
+                      >
+                        {participant.state === "muted" ? "Unmute" : "Mute"}
+                      </button>
+
+                      <button
+                        onClick={() => handleRemove(participant.id)}
+                        className="rounded-lg bg-red-600/80 px-3 py-1.5 text-xs font-medium transition hover:bg-red-600"
+                      >
+                        Remove
+                      </button>
+                    </div>
                   )}
                 </div>
               ))}
@@ -145,6 +224,18 @@ export default function HostRoom({
                 <p className="text-sm text-gray-400">
                   Waiting for participants to join.
                 </p>
+              )}
+
+              {participants.some(
+                (participant) =>
+                  !participant.left_at && participant.state !== "removed",
+              ) && (
+                <button
+                  onClick={handleMuteAll}
+                  className="mt-2 w-full rounded-lg bg-[#29292f] px-4 py-3 text-sm font-medium transition hover:bg-[#35353c]"
+                >
+                  Mute All
+                </button>
               )}
             </div>
           </Panel>

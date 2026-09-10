@@ -39,5 +39,6 @@ class ParticipantResponse(BaseModel):
     display_name: str
     joined_at: datetime
     left_at: datetime | None
+    state: str
     
     model_config = ConfigDict(from_attributes=True)

@@ -2,7 +2,7 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from .database import Base
 
-# Basee -> comes from database.py
+# Base -> comes from database.py
 class Meeting(Base):
     __tablename__ = "meetings"
 
@@ -25,4 +25,4 @@ class Participant(Base):
     display_name = Column(String, nullable=False)
     joined_at = Column(DateTime, nullable=False)
     left_at = Column(DateTime)
-
+    state = Column(String, nullable=False, default="active")

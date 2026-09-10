@@ -19,6 +19,7 @@ export type Participant = {
   display_name: string;
   joined_at: string;
   left_at: string | null;
+  state: string;
 };
 
 export async function getMeetings(): Promise<Meeting[]> {
@@ -142,4 +143,57 @@ export async function createMeeting(meeting: {
   }
 
   return data;
+}
+
+export async function toggleMuteParticipant(
+  meetingId: string,
+  participantId: number
+) {
+  const response = await fetch(
+    `${API_URL}/meetings/${meetingId}/participants/${participantId}/mute`,
+    {
+      method: "POST",
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to mute/unmute participant");
+  }
+
+  return response.json();
+}
+
+export async function muteAllParticipants(
+  meetingId: string
+) {
+  const response = await fetch(
+    `${API_URL}/meetings/${meetingId}/participants/mute-all`,
+    {
+      method: "POST",
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to mute all participants");
+  }
+
+  return response.json();
+}
+
+export async function removeParticipant(
+  meetingId: string,
+  participantId: number
+) {
+  const response = await fetch(
+    `${API_URL}/meetings/${meetingId}/participants/${participantId}/remove`,
+    {
+      method: "POST",
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to remove participant");
+  }
+
+  return response.json();
 }

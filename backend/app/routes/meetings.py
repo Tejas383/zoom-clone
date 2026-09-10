@@ -117,7 +117,8 @@ def join_meeting(
         meeting_id = meeting_db.id,
         display_name = participant.display_name,
         joined_at = datetime.now(),
-        left_at = None
+        left_at = None,
+        state = "active"
     )
     db.add(participant_db)
     db.commit()
@@ -196,7 +197,8 @@ def leave_meeting(
     participant_db = db.query(Participant).filter(
         Participant.meeting_id == meeting_db.id,
         Participant.display_name == participant.display_name,
-        Participant.left_at == None
+        Participant.left_at == None,
+        Participant.state != "removed"
     ).first()
 
     if participant_db is None:
@@ -205,6 +207,112 @@ def leave_meeting(
             detail="Participant not found"
         )
 
+    participant_db.left_at = datetime.now()
+
+    db.commit()
+    db.refresh(participant_db)
+
+    return participant_db
+
+@router.post("/meetings/{meeting_id}/participants/mute-all")
+def mute_all_participants(
+    meeting_id: str,
+    db: Session = Depends(get_db)
+):
+    meeting_db = db.query(Meeting).filter(
+        Meeting.meeting_id == meeting_id
+    ).first()
+
+    if meeting_db is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Meeting not found"
+        )
+
+    participants = db.query(Participant).filter(
+        Participant.meeting_id == meeting_db.id,
+        Participant.state != "removed",
+        Participant.left_at == None
+    ).all()
+
+    for participant in participants:
+        participant.state = "muted"
+
+    db.commit()
+
+    return participants
+
+@router.post("/meetings/{meeting_id}/participants/{participant_id}/mute")
+def mute_participant(
+    meeting_id: str,
+    participant_id: int,
+    db: Session = Depends(get_db)
+):
+    meeting_db = db.query(Meeting).filter(
+        Meeting.meeting_id == meeting_id
+    ).first()
+
+    if meeting_db is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Meeting not found"
+        )
+
+    participant_db = db.query(Participant).filter(
+        Participant.id == participant_id,
+        Participant.meeting_id == meeting_db.id
+    ).first()
+
+    if participant_db is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Participant not found"
+        )
+
+    if participant_db.state == "removed":
+        raise HTTPException(
+            status_code=400,
+            detail="Participant has been removed"
+        )
+
+    if participant_db.state == "muted":
+        participant_db.state = "active"
+    else:
+        participant_db.state = "muted"
+
+    db.commit()
+    db.refresh(participant_db)
+
+    return participant_db
+
+@router.post("/meetings/{meeting_id}/participants/{participant_id}/remove")
+def remove_participant(
+    meeting_id: str,
+    participant_id: int,
+    db: Session = Depends(get_db)
+):
+    meeting_db = db.query(Meeting).filter(
+        Meeting.meeting_id == meeting_id
+    ).first()
+
+    if meeting_db is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Meeting not found"
+        )
+
+    participant_db = db.query(Participant).filter(
+        Participant.id == participant_id,
+        Participant.meeting_id == meeting_db.id
+    ).first()
+
+    if participant_db is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Participant not found"
+        )
+
+    participant_db.state = "removed"
     participant_db.left_at = datetime.now()
 
     db.commit()

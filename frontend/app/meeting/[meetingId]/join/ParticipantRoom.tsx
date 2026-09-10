@@ -9,11 +9,7 @@ import {
   leaveMeeting,
 } from "@/app/lib/api";
 import { useRouter } from "next/navigation";
-import MeetingShell, {
-  EndedNotice,
-  Panel,
-  Stage,
-} from "../MeetingShell";
+import MeetingShell, { EndedNotice, Panel, Stage } from "../MeetingShell";
 
 /** The participant side of a meeting: name preview, then the room. */
 export default function ParticipantRoom({
@@ -41,7 +37,18 @@ export default function ParticipantRoom({
     const poll = () => {
       getParticipants(meeting.meeting_id)
         .then((data) => {
-          if (active) setParticipants(data);
+          if (!active) return;
+
+          const currentParticipant = data.find(
+            (participant) => participant.display_name === joinedName,
+          );
+
+          if (currentParticipant?.state === "removed") {
+            router.push("/");
+            return;
+          }
+
+          setParticipants(data);
         })
         .catch(() => {
           // A failed refresh keeps the last known roster on screen.
@@ -189,11 +196,17 @@ export default function ParticipantRoom({
                     key={participant.id}
                     className="flex items-center justify-between rounded-lg bg-white/5 px-4 py-3 text-sm"
                   >
-                    <span>{participant.display_name}</span>
+                    <div className="flex items-center gap-3">
+                      <span>{participant.display_name}</span>
 
-                    {participant.left_at && (
-                      <span className="text-xs text-gray-500">Left</span>
-                    )}
+                      {participant.state === "muted" && (
+                        <span className="text-xs text-gray-500">Muted</span>
+                      )}
+
+                      {participant.left_at && (
+                        <span className="text-xs text-gray-500">Left</span>
+                      )}
+                    </div>
                   </div>
                 ))
               )}
