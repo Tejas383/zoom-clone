@@ -27,10 +27,11 @@ export default function ParticipantRoom({
   const [showParticipants, setShowParticipants] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [isMuted, setIsMuted] = useState(false);
 
   // The roster is polled only while it is on screen.
   useEffect(() => {
-    if (!joinedName || !showParticipants) return;
+    if (!joinedName) return;
 
     let active = true;
 
@@ -48,6 +49,7 @@ export default function ParticipantRoom({
             return;
           }
 
+          setIsMuted(currentParticipant?.state === "muted");
           setParticipants(data);
         })
         .catch(() => {
@@ -63,7 +65,7 @@ export default function ParticipantRoom({
       active = false;
       clearInterval(timer);
     };
-  }, [joinedName, showParticipants, meeting.meeting_id]);
+  }, [joinedName, meeting.meeting_id]);
 
   const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -174,7 +176,7 @@ export default function ParticipantRoom({
       <Stage
         meeting={meeting}
         name={joinedName}
-        caption="Your video will appear here"
+        caption={isMuted ? "You are muted" : "Your video will appear here"}
       />
 
       {showParticipants && (
