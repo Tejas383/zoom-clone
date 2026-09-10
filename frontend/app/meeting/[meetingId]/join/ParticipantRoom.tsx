@@ -28,10 +28,11 @@ export default function ParticipantRoom({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [isMuted, setIsMuted] = useState(false);
+  const [participantId, setParticipantId] = useState<number | null>(null);
 
   // The roster is polled only while it is on screen.
   useEffect(() => {
-    if (!joinedName) return;
+    if (!joinedName || participantId === null) return;
 
     let active = true;
 
@@ -41,7 +42,7 @@ export default function ParticipantRoom({
           if (!active) return;
 
           const currentParticipant = data.find(
-            (participant) => participant.display_name === joinedName,
+            (participant) => participant.id === participantId,
           );
 
           if (currentParticipant?.state === "removed") {
@@ -59,13 +60,13 @@ export default function ParticipantRoom({
 
     poll();
 
-    const timer = setInterval(poll, 5000);
+    const timer = setInterval(poll, 1000);
 
     return () => {
       active = false;
       clearInterval(timer);
     };
-  }, [joinedName, meeting.meeting_id]);
+  }, [joinedName, participantId, meeting.meeting_id]);
 
   const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,8 +82,9 @@ export default function ParticipantRoom({
     setBusy(true);
 
     try {
-      await joinMeeting(meeting.meeting_id, name);
+      const participant = await joinMeeting(meeting.meeting_id, name);
 
+      setParticipantId(participant.id);
       setJoinedName(name);
     } catch {
       setError("Couldn't join this meeting. Please try again.");
@@ -95,7 +97,9 @@ export default function ParticipantRoom({
     setBusy(true);
 
     try {
-      await leaveMeeting(meeting.meeting_id, joinedName);
+      if (participantId !== null) {
+        await leaveMeeting(meeting.meeting_id, participantId);
+      }
     } catch {
       // Leaving locally still takes the participant back to the portal.
     }

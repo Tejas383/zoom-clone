@@ -76,7 +76,7 @@ export async function getParticipants(
 
 export async function leaveMeeting(
   meetingId: string,
-  displayName: string
+  participantId: number
 ) {
   const response = await fetch(
     `${API_URL}/meetings/${meetingId}/leave`,
@@ -86,7 +86,7 @@ export async function leaveMeeting(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        display_name: displayName,
+        participant_id: participantId,
       }),
     }
   );

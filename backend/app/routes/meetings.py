@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
 import secrets
 from datetime import datetime
@@ -181,7 +181,7 @@ def get_participants(
 @router.post("/meetings/{meeting_id}/leave")
 def leave_meeting(
     meeting_id: str,
-    participant: ParticipantCreate,
+    participant_id: int = Body(...),
     db: Session = Depends(get_db)
 ):
     meeting_db = db.query(Meeting).filter(
@@ -196,7 +196,7 @@ def leave_meeting(
 
     participant_db = db.query(Participant).filter(
         Participant.meeting_id == meeting_db.id,
-        Participant.display_name == participant.display_name,
+        Participant.id == participant_id,
         Participant.left_at == None,
         Participant.state != "removed"
     ).first()
