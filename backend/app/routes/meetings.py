@@ -173,7 +173,9 @@ def get_participants(
         )
 
     participants = db.query(Participant).filter(
-        Participant.meeting_id == meeting_db.id
+        Participant.meeting_id == meeting_db.id,
+        Participant.left_at == None,
+        Participant.state != "removed"
     ).all()
 
     return participants
@@ -181,7 +183,7 @@ def get_participants(
 @router.post("/meetings/{meeting_id}/leave")
 def leave_meeting(
     meeting_id: str,
-    participant_id: int = Body(...),
+    data: dict = Body(...),
     db: Session = Depends(get_db)
 ):
     meeting_db = db.query(Meeting).filter(
@@ -194,6 +196,8 @@ def leave_meeting(
             detail="Meeting not found"
         )
 
+    participant_id = data.get("participant_id")
+    
     participant_db = db.query(Participant).filter(
         Participant.meeting_id == meeting_db.id,
         Participant.id == participant_id,
